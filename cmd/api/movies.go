@@ -15,7 +15,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(w, r)
 	if err != nil {
-		http.NotFound(w, r)
+		app.notFoundResponse(w, r)
 		return
 	}
 
@@ -31,7 +31,6 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 
 	err = app.WriteJson(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
-		app.logger.Print(err)
-		http.Error(w, "Could not find the movie", http.StatusInternalServerError)
+		app.serverErrorResponse(w, r, err)
 	}
 }
