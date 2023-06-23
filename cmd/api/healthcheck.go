@@ -4,6 +4,7 @@ import (
 	"net/http"
 )
 
+// healthcheckHandler: PING endpoint to check status
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	envelope := envelope{
 		"status": "available",

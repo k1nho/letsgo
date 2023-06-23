@@ -9,6 +9,7 @@ import (
 	"github.com/k1nho/letsgo/internal/validator"
 )
 
+// createMovieHandler: create a Movie given title, year, runtime, genres (JSON)
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
@@ -53,6 +54,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 
 }
 
+// showMovieHandler: get a specific movie given id in path (JSON)
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(w, r)
 	if err != nil {
@@ -77,6 +79,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+// updateMovieHandler: update a movie given an id in path (update: title, year, runtime, genres) (JSON)
 func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(w, r)
 	if err != nil {
@@ -147,6 +150,7 @@ func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// deleteMovieHandler: Delete a movie given id in param
 func (app *application) deleteMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(w, r)
 	if err != nil {
