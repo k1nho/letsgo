@@ -1,6 +1,7 @@
 package data
 
 import (
+	"math"
 	"strings"
 
 	"github.com/k1nho/letsgo/internal/validator"
@@ -45,4 +46,37 @@ func (f Filters) sortDirection() string {
 		return "DESC"
 	}
 	return "ASC"
+}
+
+// limit: Returns the number of records to be retrieved from a page
+func (f Filters) limit() int {
+	return f.PageSize
+}
+
+// offset: Returns the records starting from (page-1) *PageSize (this could overflow, but setting since our validations are 10M*100 it does not surpass the integer max)
+func (f Filters) offset() int {
+	return (f.Page - 1) * f.PageSize
+}
+
+type Metadata struct {
+	CurrentPage  int `json:"current_page,omitempty"`
+	PageSize     int `json:"page_size,omitempty"`
+	FirstPage    int `json:"first_page,omitempty"`
+	LastPage     int `json:"last_page,omitempty"`
+	TotalRecords int `json:"total_records,omitempty"`
+}
+
+// calculateMetadata: Return a Metadata struct containing information about pagination
+func calculateMetadata(totalRecords, page, pageSize int) Metadata {
+	if totalRecords == 0 {
+		return Metadata{}
+	}
+
+	return Metadata{
+		CurrentPage:  page,
+		PageSize:     pageSize,
+		FirstPage:    1,
+		LastPage:     int(math.Ceil(float64(totalRecords) / float64(pageSize))),
+		TotalRecords: totalRecords,
+	}
 }
