@@ -3,7 +3,7 @@ package validator
 import "regexp"
 
 var (
-	emailRX = "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\. [a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+	EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
 
 // Define a new Validator type which contains a map of validation errors.
@@ -45,8 +45,8 @@ func In(value string, list ...string) bool {
 	return false
 }
 
-func Matches(value string, rg *regexp.Regexp) bool {
-	return rg.MatchString(value)
+func Matches(value string, rx *regexp.Regexp) bool {
+	return rx.MatchString(value)
 }
 
 // Unique: returns true if all the values are unique, otherwise false
