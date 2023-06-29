@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/k1nho/letsgo/internal/data"
 	"github.com/k1nho/letsgo/internal/validator"
@@ -53,8 +54,20 @@ func (app *application) RegisterUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Token to activate the user account (prevent bots from spamming the service)
+	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopedActivation)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	app.background(func() {
-		err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
+		data := map[string]interface{}{
+			"activationToken": token.PlainText,
+			"userID":          user.ID,
+		}
+
+		err = app.mailer.Send(user.Email, "user_welcome.tmpl", data)
 		if err != nil {
 			app.logger.PrinfError(err, nil)
 		}
@@ -65,4 +78,60 @@ func (app *application) RegisterUserHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 	}
 
+}
+
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		TokenPlainText string `json:"token"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+
+	if data.ValidateTokenPlainText(v, input.TokenPlainText); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	user, err := app.models.Users.GetForToken(data.ScopedActivation, input.TokenPlainText)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			v.AddError("token", "invalid or expired token activation")
+			app.failedValidationResponse(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+
+		return
+	}
+
+	user.Activated = true
+
+	err = app.models.Users.Update(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.models.Tokens.DeleteAllTokens(user.ID, data.ScopedActivation)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.WriteJson(w, http.StatusOK, envelope{"user": user}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
