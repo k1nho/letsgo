@@ -125,3 +125,15 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 
 	return l
 }
+
+// Very powerful method to handle panic in goroutines
+func (app *application) background(fn func()) {
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.PrinfError(fmt.Errorf("%s", err), nil)
+			}
+			fn()
+		}()
+	}()
+}
