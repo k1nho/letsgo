@@ -13,6 +13,7 @@ import (
 
 var (
 	ErrDuplicatedEmail = errors.New("duplicate email")
+	AnonymousUser      = &User{}
 )
 
 func ValidateEmail(v *validator.Validator, email string) {
@@ -55,6 +56,10 @@ type User struct {
 	Password  password  `json:"-"`
 	Activated bool      `json:"activated"`
 	Version   int       `json:"-"`
+}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
 
 func (p *password) Set(plaintextpassword string) error {
