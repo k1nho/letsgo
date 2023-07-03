@@ -110,7 +110,8 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Authorization")
 
-		authorization_header := w.Header().Get("Authorization")
+		authorization_header := r.Header.Get("Authorization")
+
 		if authorization_header == "" {
 			r = app.contextSetUser(r, data.AnonymousUser)
 			next.ServeHTTP(w, r)
